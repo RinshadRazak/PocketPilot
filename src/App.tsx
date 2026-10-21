@@ -10,12 +10,14 @@ import {
 import {
   loadInitialState,
   saveStateToStorage,
-  generateSeedData,
+  getDefaultState,
+  restoreFromDemoBackup,
   validateState,
 } from './utils/storage';
 import {
   STORAGE_KEY,
   BACKUP_KEY,
+  DEMO_BACKUP_KEY,
 } from './utils/constants';
 import {
   getCurrentMonthKey,
@@ -49,6 +51,14 @@ export const App: React.FC = () => {
   const [hasBackup, setHasBackup] = useState<boolean>(() => {
     try {
       return !!localStorage.getItem(BACKUP_KEY);
+    } catch {
+      return false;
+    }
+  });
+
+  const [hasDemoBackup, setHasDemoBackup] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem(DEMO_BACKUP_KEY);
     } catch {
       return false;
     }
@@ -88,7 +98,7 @@ export const App: React.FC = () => {
         setState(valid);
         showToast('Records were updated in another tab.');
       } else if (e.newValue === null) {
-        const fresh = generateSeedData();
+        const fresh = getDefaultState();
         stateRef.current = fresh;
         setState(fresh);
         showToast('Browser records changed in another tab.');
@@ -290,6 +300,44 @@ export const App: React.FC = () => {
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  // Download pre-cleanup demo backup
+  const handleDownloadDemoBackup = () => {
+    const raw = localStorage.getItem(DEMO_BACKUP_KEY);
+    if (!raw) return;
+    const blob = new Blob([raw], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pocketpilot-pre-cleanup-backup-${getTodayString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Pre-cleanup backup downloaded.');
+  };
+
+  // Restore pre-cleanup demo backup
+  const handleRestoreDemoBackup = () => {
+    setConfirmDialog({
+      title: 'Restore pre-cleanup records?',
+      message:
+        'This will restore your records exactly as they were before the demo transaction cleanup.',
+      confirmLabel: 'Restore records',
+      dangerous: false,
+      action: () => {
+        const restored = restoreFromDemoBackup();
+        if (restored) {
+          stateRef.current = restored;
+          setState(restored);
+          showToast('Pre-cleanup records restored.');
+        } else {
+          showToast('Could not restore from backup.');
+        }
+        setConfirmDialog(null);
+      },
+    });
+  };
+
   // Clear transactions handler
   const handleClearTransactions = () => {
     setConfirmDialog({
@@ -311,12 +359,12 @@ export const App: React.FC = () => {
     setConfirmDialog({
       title: 'Restore starting data?',
       message:
-        'This replaces all current transactions, categories, and budgets with the original starting records in this browser. Export a CSV first if you want a copy.',
+        'This resets your categories and monthly limits to the default settings, with an empty transaction list. Export a CSV first if you want a copy.',
       confirmLabel: 'Restore records',
       dangerous: true,
       action: () => {
-        const seed = generateSeedData();
-        updateState(() => seed);
+        const fresh = getDefaultState();
+        updateState(() => fresh);
         setSelectedMonth(getCurrentMonthKey());
         setConfirmDialog(null);
         showToast('Starting records restored.');
@@ -351,6 +399,7 @@ export const App: React.FC = () => {
             state={state}
             selectedMonth={selectedMonth}
             onNavigate={handleNavigate}
+            onAddTransaction={() => setActiveTransactionModal(true)}
           />
         )}
 
@@ -389,9 +438,12 @@ export const App: React.FC = () => {
           <DataView
             state={state}
             hasBackup={hasBackup}
+            hasDemoBackup={hasDemoBackup}
             onOpenImport={() => setImportModalOpen(true)}
             onExportCsv={handleExportCsv}
             onDownloadBackup={handleDownloadBackup}
+            onDownloadDemoBackup={handleDownloadDemoBackup}
+            onRestoreDemoBackup={handleRestoreDemoBackup}
             onClearTransactions={handleClearTransactions}
             onRestoreDefaults={handleRestoreDefaults}
           />

@@ -4,6 +4,8 @@ import {
   LEGACY_STORAGE_KEY,
   BACKUP_KEY,
   LEGACY_BACKUP_KEY,
+  DEMO_CLEANUP_KEY,
+  DEMO_BACKUP_KEY,
   DEFAULT_CATEGORIES,
   DEFAULT_BUDGETS,
 } from './constants';
@@ -192,6 +194,83 @@ export function validateState(data: unknown): AppState | null {
   }
 }
 
+export const SEED_DESCRIPTIONS = new Set([
+  'Northline Studio · Payroll',
+  'Fieldwork · Design project',
+  'Apartment Rent',
+  'Supermarket Supplies',
+  'Organic Store',
+  'Weekend Dinner',
+  'Family Restaurant',
+  'Metro Pass',
+  'Electricity Bill',
+  'Spotify Premium',
+  'Netflix',
+  'Apparel Store',
+  'Bookshop',
+  'Department Store',
+  'Home Décor',
+  'Electronics',
+  'Clinic Consultation',
+  'Cinema Tickets',
+  'Train Travel',
+  'Transit Pass',
+  'Café Coffee',
+  'Stationery Store',
+  'Tea & Snacks',
+  'Dinner Outing',
+  'Fresh Produce Market',
+  'Ride Share',
+  'Pharmacy Medicines',
+]);
+
+export function isDemoTransaction(t: Transaction): boolean {
+  return t.id.startsWith('opening-') && SEED_DESCRIPTIONS.has(t.description);
+}
+
+export function getDefaultState(): AppState {
+  return {
+    version: 1,
+    categories: DEFAULT_CATEGORIES.map(c => ({ ...c })),
+    transactions: [],
+    budgets: { ...DEFAULT_BUDGETS },
+  };
+}
+
+export function migrateAndCleanDemoData(state: AppState): {
+  state: AppState;
+  cleanedCount: number;
+} {
+  const demoTxs = state.transactions.filter(isDemoTransaction);
+  if (demoTxs.length === 0) {
+    return { state, cleanedCount: 0 };
+  }
+  const cleanTransactions = state.transactions.filter(t => !isDemoTransaction(t));
+  return {
+    state: {
+      ...state,
+      transactions: cleanTransactions,
+    },
+    cleanedCount: demoTxs.length,
+  };
+}
+
+export function restoreFromDemoBackup(): AppState | null {
+  try {
+    const raw = localStorage.getItem(DEMO_BACKUP_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const valid = validateState(parsed);
+    if (valid) {
+      saveStateToStorage(valid);
+      return valid;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export function loadInitialState(): AppState {
   try {
     // 1. Check primary PocketPilot storage key
@@ -199,7 +278,29 @@ export function loadInitialState(): AppState {
     if (raw) {
       const parsed = JSON.parse(raw);
       const valid = validateState(parsed);
-      if (valid) return valid;
+      if (valid) {
+        // Safe migration: check if demo transactions are present
+        const hasDemoCleanupRun = localStorage.getItem(DEMO_CLEANUP_KEY);
+        if (!hasDemoCleanupRun) {
+          const { state: cleanedState, cleanedCount } = migrateAndCleanDemoData(valid);
+          if (cleanedCount > 0) {
+            // Reversibly preserve pre-migration raw state
+            try {
+              localStorage.setItem(DEMO_BACKUP_KEY, raw);
+            } catch {
+              // ignore
+            }
+            saveStateToStorage(cleanedState);
+          }
+          try {
+            localStorage.setItem(DEMO_CLEANUP_KEY, 'true');
+          } catch {
+            // ignore
+          }
+          return cleanedState;
+        }
+        return valid;
+      }
       try {
         localStorage.setItem(BACKUP_KEY, raw);
       } catch {
@@ -213,19 +314,35 @@ export function loadInitialState(): AppState {
       const parsed = JSON.parse(legacyRaw);
       const valid = validateState(parsed);
       if (valid) {
-        // Save migrated state to new key
+        const { state: cleanedState, cleanedCount } = migrateAndCleanDemoData(valid);
+        if (cleanedCount > 0) {
+          try {
+            localStorage.setItem(DEMO_BACKUP_KEY, legacyRaw);
+          } catch {
+            // ignore
+          }
+        }
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
+          localStorage.setItem(DEMO_CLEANUP_KEY, 'true');
         } catch {
           // ignore
         }
-        return valid;
+        saveStateToStorage(cleanedState);
+        return cleanedState;
       }
     }
   } catch {
     // ignore
   }
-  return generateSeedData();
+
+  // Genuinely new user starts with empty transaction list and default categories/budgets
+  const empty = getDefaultState();
+  try {
+    localStorage.setItem(DEMO_CLEANUP_KEY, 'true');
+  } catch {
+    // ignore
+  }
+  return empty;
 }
 
 export function saveStateToStorage(state: AppState): boolean {

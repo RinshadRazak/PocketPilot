@@ -1,4 +1,5 @@
 import React from 'react';
+import { TrendingUp } from 'lucide-react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -19,6 +20,21 @@ interface TrendChartProps {
 
 export const TrendChart: React.FC<TrendChartProps> = ({ state, month }) => {
   const data = getHistoricalChartData(state, month);
+  const hasData = data.some(d => d.income > 0 || d.expenses > 0);
+
+  if (!hasData) {
+    return (
+      <div className="trend-chart" style={{ display: 'grid', placeItems: 'center', height: '248px' }}>
+        <div className="empty-state compact-empty" style={{ minHeight: '180px', padding: '16px' }}>
+          <TrendingUp size={28} style={{ color: 'var(--mint)', opacity: 0.85, marginBottom: '8px' }} />
+          <h3 style={{ fontSize: '15px', margin: '4px 0 2px', color: '#e3edf7' }}>No cash flow activity yet</h3>
+          <p style={{ fontSize: '11px', margin: 0, color: 'var(--muted)', maxWidth: '300px', lineHeight: 1.5 }}>
+            Add income or expense transactions to view your six-month financial trends.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="trend-chart">

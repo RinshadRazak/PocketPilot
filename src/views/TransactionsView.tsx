@@ -139,8 +139,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           ) : (
             <div className="empty-state">
               <Search size={28} />
-              <h3>No transactions found</h3>
-              <p>Try another month or filter, or add your first entry.</p>
+              <h3>{monthTransactions.length === 0 ? 'No transactions this month' : 'No transactions found'}</h3>
+              <p>
+                {monthTransactions.length === 0
+                  ? 'Record your income or expenses to see your money in focus.'
+                  : 'Try another month or adjust your search and filters.'}
+              </p>
               <button
                 className="button button-primary"
                 onClick={onAddTransaction}

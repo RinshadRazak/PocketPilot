@@ -1,10 +1,10 @@
-import React from 'react';
 import {
   Wallet,
   ArrowDownLeft,
   ArrowUpRight,
   Activity,
   ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { AppState, ViewType } from '../types';
 import {
@@ -23,12 +23,14 @@ interface OverviewViewProps {
   state: AppState;
   selectedMonth: string;
   onNavigate: (view: ViewType) => void;
+  onAddTransaction?: () => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
   state,
   selectedMonth,
   onNavigate,
+  onAddTransaction,
 }) => {
   const summary = getMonthSummary(state, selectedMonth);
   const spendingMap = getCategorySpendingForMonth(state, selectedMonth);
@@ -211,8 +213,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 );
               })
             ) : (
-              <div className="empty-state compact-empty">
-                No activity this month yet.
+              <div className="empty-state compact-empty" style={{ gap: '10px' }}>
+                <p style={{ margin: 0 }}>No activity this month yet.</p>
+                {onAddTransaction && (
+                  <button
+                    className="button button-outline"
+                    onClick={onAddTransaction}
+                    type="button"
+                    style={{ minHeight: '32px', padding: '0 12px', fontSize: '11px' }}
+                  >
+                    <Plus size={14} /> Add transaction
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -4,6 +4,8 @@ export const STORAGE_KEY = 'pocketpilot-v1';
 export const LEGACY_STORAGE_KEY = 'pocketwise-v1';
 export const BACKUP_KEY = 'pocketpilot-unreadable-backup';
 export const LEGACY_BACKUP_KEY = 'pocketwise-unreadable-backup';
+export const DEMO_CLEANUP_KEY = 'pocketpilot-cleaned-demo-v1';
+export const DEMO_BACKUP_KEY = 'pocketpilot-demo-migration-backup';
 
 export const CATEGORY_COLORS = [
   '#74f6c8',

@@ -6,15 +6,19 @@ import {
   Download,
   Trash2,
   Repeat2,
+  History,
 } from 'lucide-react';
 import { AppState } from '../types';
 
 interface DataViewProps {
   state: AppState;
   hasBackup: boolean;
+  hasDemoBackup?: boolean;
   onOpenImport: () => void;
   onExportCsv: () => void;
   onDownloadBackup: () => void;
+  onDownloadDemoBackup?: () => void;
+  onRestoreDemoBackup?: () => void;
   onClearTransactions: () => void;
   onRestoreDefaults: () => void;
 }
@@ -22,9 +26,12 @@ interface DataViewProps {
 export const DataView: React.FC<DataViewProps> = ({
   state,
   hasBackup,
+  hasDemoBackup,
   onOpenImport,
   onExportCsv,
   onDownloadBackup,
+  onDownloadDemoBackup,
+  onRestoreDemoBackup,
   onClearTransactions,
   onRestoreDefaults,
 }) => {
@@ -58,6 +65,38 @@ export const DataView: React.FC<DataViewProps> = ({
           >
             Download backup
           </button>
+        </section>
+      )}
+
+      {hasDemoBackup && (
+        <section className="recovery-banner" style={{ borderColor: 'rgba(116, 246, 200, 0.28)', background: 'rgba(23, 59, 70, 0.35)', color: '#d5f7ec' }}>
+          <History size={20} style={{ color: 'var(--mint)' }} />
+          <div>
+            <strong style={{ color: '#ebfaf4' }}>Pre-cleanup backup saved.</strong>
+            <p style={{ color: '#9cc2b8' }}>
+              A copy of your previous records was preserved before demo data cleanup.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {onDownloadDemoBackup && (
+              <button
+                className="button button-outline"
+                onClick={onDownloadDemoBackup}
+                type="button"
+              >
+                Download copy
+              </button>
+            )}
+            {onRestoreDemoBackup && (
+              <button
+                className="button button-outline"
+                onClick={onRestoreDemoBackup}
+                type="button"
+              >
+                Revert cleanup
+              </button>
+            )}
+          </div>
         </section>
       )}
 
