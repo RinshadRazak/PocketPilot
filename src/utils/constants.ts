@@ -36,14 +36,14 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export const DEFAULT_BUDGETS: Budgets = {
-  housing: 1850,
-  groceries: 550,
-  dining: 250,
-  transport: 220,
-  shopping: 300,
-  utilities: 240,
-  subscriptions: 100,
-  health: 180,
-  entertainment: 180,
-  travel: 350,
+  housing: 0,
+  groceries: 0,
+  dining: 0,
+  transport: 0,
+  shopping: 0,
+  utilities: 0,
+  subscriptions: 0,
+  health: 0,
+  entertainment: 0,
+  travel: 0,
 };
