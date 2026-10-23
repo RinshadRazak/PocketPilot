@@ -1,4 +1,4 @@
-import { AppState, Transaction, MonthSummary, ChartMonthData, Insight } from '../types';
+import { AppState, Transaction, MonthSummary, ChartMonthData, Insight, Category } from '../types';
 import {
   getMonthKeyFromDate,
   getCurrentMonthKey,
@@ -9,6 +9,15 @@ import {
   toCents,
   fromCents,
 } from './formatters';
+
+export interface CategoryBreakdownItem {
+  categoryId: string;
+  category?: Category;
+  name: string;
+  color: string;
+  amount: number;
+  percent: number;
+}
 
 export function getTransactionsForMonth(state: AppState, monthKey: string): Transaction[] {
   return state.transactions.filter(t => getMonthKeyFromDate(t.date) === monthKey);
@@ -24,6 +33,57 @@ export function getCategorySpendingForMonth(state: AppState, monthKey: string): 
   return Object.fromEntries(
     Object.entries(map).map(([k, v]) => [k, fromCents(v)])
   );
+}
+
+export function getCategoryIncomeForMonth(state: AppState, monthKey: string): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const t of getTransactionsForMonth(state, monthKey)) {
+    if (t.type === 'income') {
+      map[t.categoryId] = (map[t.categoryId] ?? 0) + toCents(t.amount);
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(map).map(([k, v]) => [k, fromCents(v)])
+  );
+}
+
+export function getCategoryBreakdown(
+  state: AppState,
+  monthKey: string,
+  type: 'income' | 'expense'
+): { items: CategoryBreakdownItem[]; total: number } {
+  const txs = getTransactionsForMonth(state, monthKey).filter(t => t.type === type);
+  const totalCents = txs.reduce((acc, t) => acc + toCents(t.amount), 0);
+  const total = fromCents(totalCents);
+
+  if (totalCents === 0) {
+    return { items: [], total: 0 };
+  }
+
+  const categoryTotals: Record<string, number> = {};
+  for (const t of txs) {
+    categoryTotals[t.categoryId] = (categoryTotals[t.categoryId] ?? 0) + toCents(t.amount);
+  }
+
+  const categoryMap = new Map<string, Category>(state.categories.map(c => [c.id, c]));
+
+  const items: CategoryBreakdownItem[] = Object.entries(categoryTotals)
+    .map(([catId, cents]) => {
+      const cat = categoryMap.get(catId);
+      const amount = fromCents(cents);
+      const percent = Math.round((cents / totalCents) * 100);
+      return {
+        categoryId: catId,
+        category: cat,
+        name: cat?.name ?? catId,
+        color: cat?.color ?? (type === 'income' ? '#74f6c8' : '#a49cff'),
+        amount,
+        percent,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+
+  return { items, total };
 }
 
 export function getMonthSummary(state: AppState, monthKey: string): MonthSummary {

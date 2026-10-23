@@ -15,7 +15,9 @@ import {
 } from '../utils/calculations';
 import { formatCurrency, formatMonthYear } from '../utils/formatters';
 import { TrendChart } from '../components/TrendChart';
-import { SpendingRing } from '../components/SpendingRing';
+import { IncomeCategoryCard } from '../components/IncomeCategoryCard';
+import { ExpenseCategoryCard } from '../components/ExpenseCategoryCard';
+import { BudgetVsActualCard } from '../components/BudgetVsActualCard';
 import { InsightCard } from '../components/InsightCard';
 import { TransactionRow } from '../components/TransactionRow';
 
@@ -117,6 +119,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </article>
       </div>
 
+      {/* Row 2: Cash Flow Over Time + Income by Category */}
       <div className="analytics-grid">
         <section className="panel trend-panel">
           <div className="panel-head">
@@ -139,28 +142,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <TrendChart state={state} month={selectedMonth} />
         </section>
 
-        <section className="panel breakdown-panel">
-          <div className="panel-head">
-            <div>
-              <span className="eyebrow">WHERE IT WENT</span>
-              <h2>Spending mix</h2>
-              <p>By category this month</p>
-            </div>
-            <button
-              className="icon-button subtle"
-              onClick={() => onNavigate('budgets')}
-              aria-label="View category budgets"
-              type="button"
-            >
-              <ArrowUpRight size={19} />
-            </button>
-          </div>
-          <SpendingRing
-            state={state}
-            month={selectedMonth}
-            onViewBudgets={() => onNavigate('budgets')}
-          />
-        </section>
+        <IncomeCategoryCard
+          state={state}
+          month={selectedMonth}
+          onNavigate={onNavigate}
+          onAddTransaction={onAddTransaction}
+        />
+      </div>
+
+      {/* Row 3: Expenses by Category + Budget vs Actual */}
+      <div className="analytics-grid secondary-analytics-grid">
+        <ExpenseCategoryCard
+          state={state}
+          month={selectedMonth}
+          onNavigate={onNavigate}
+          onAddTransaction={onAddTransaction}
+        />
+
+        <BudgetVsActualCard
+          state={state}
+          month={selectedMonth}
+          onNavigate={onNavigate}
+        />
       </div>
 
       <div className="lower-grid">

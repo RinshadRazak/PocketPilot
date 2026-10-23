@@ -31,7 +31,7 @@ import {
 } from './utils/csv';
 import { Sidebar } from './components/Sidebar';
 import { PageHeader } from './components/PageHeader';
-import { MobileHeader, MobileTabBar, Footer, Toast } from './components/ShellComponents';
+import { MobileTabBar, Footer, Toast } from './components/ShellComponents';
 import { OverviewView } from './views/OverviewView';
 import { TransactionsView } from './views/TransactionsView';
 import { BudgetsView } from './views/BudgetsView';
@@ -380,11 +380,6 @@ export const App: React.FC = () => {
         mobileOpen={mobileNavOpen}
       />
 
-      <MobileHeader
-        onNavigate={handleNavigate}
-        mobileOpen={mobileNavOpen}
-        onToggleMobileNav={() => setMobileNavOpen(!mobileNavOpen)}
-      />
 
       <main className="main-content">
         <PageHeader

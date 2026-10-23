@@ -1,49 +1,15 @@
 import React from 'react';
-import { Wallet, Settings2, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { ViewType } from '../types';
 import { NAV_ITEMS } from './Sidebar';
 
-interface MobileHeaderProps {
-  onNavigate: (view: ViewType) => void;
-  mobileOpen: boolean;
-  onToggleMobileNav: () => void;
+export interface MobileHeaderProps {
+  onNavigate?: (view: ViewType) => void;
+  mobileOpen?: boolean;
+  onToggleMobileNav?: () => void;
 }
 
-export const MobileHeader: React.FC<MobileHeaderProps> = ({
-  onNavigate,
-  mobileOpen,
-  onToggleMobileNav,
-}) => {
-  return (
-    <div className="mobile-brand">
-      <button
-        className="brand"
-        onClick={() => onNavigate('overview')}
-        type="button"
-      >
-        <span className="brand-mark brand-mark-img">
-          <img
-            src="/pocketpilot-mark.png"
-            alt="PocketPilot"
-            className="brand-logo-img"
-          />
-        </span>
-        <span className="brand-word">
-          pocketpilot<span className="brand-dot">.</span>
-        </span>
-      </button>
-
-      <button
-        className="icon-button"
-        onClick={onToggleMobileNav}
-        aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
-        type="button"
-      >
-        {mobileOpen ? <X size={20} /> : <Settings2 size={20} />}
-      </button>
-    </div>
-  );
-};
+export const MobileHeader: React.FC<MobileHeaderProps> = () => null;
 
 interface MobileTabBarProps {
   currentView: ViewType;
